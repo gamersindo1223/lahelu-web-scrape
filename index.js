@@ -190,6 +190,20 @@ app.get("/lahelu/user/:username", async (req, res) => {
     await browser.close();
   }
 });
+app.get("/test", async (req, res) => {
+  const browser = await puppeteer.launch({
+    args: chromium.args,
+    defaultViewport: chromium.defaultViewport,
+    executablePath: await chromium.executablePath(),
+    headless: chromium.headless,
+  });
+
+  const page = await browser.newPage();
+  await page.goto("https://example.com");
+  const pageTitle = await page.title();
+  res.send(pageTitle)
+  await browser.close();
+})
 app.listen(port, () => {
   console.log(`App listening on http://localhost:${port}`);
 });
