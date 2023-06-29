@@ -197,7 +197,10 @@ app.get("/test", async (req, res) => {
     executablePath: await chromium.executablePath(),
     headless: chromium.headless,
   });
+  chromium.setHeadlessMode = true;
 
+  // Optional: If you'd like to disable webgl, true is the default.
+  chromium.setGraphicsMode = false;
   const page = await browser.newPage();
   await page.goto("https://example.com");
   const pageTitle = await page.title();
