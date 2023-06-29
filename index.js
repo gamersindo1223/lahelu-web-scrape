@@ -13,81 +13,85 @@ app.get("/", (req, res) => {
 });
 
 app.get("/lahelu/random", async (req, res) => {
-  console.log("got request");
-  let browser = null;
-  browser = await puppeteer.launch({
-    args: chromium.args,
-    executablePath: await chromium.executablePath(),
-    headless: "new",
-    ignoreHTTPSErrors: true,
-  });
-  const page = await browser.newPage();
-  async function getShuffle() {
-    console.log("run function");
-    await page.setUserAgent('5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36');
-    const response = await page.goto(`https://lahelu.com/shuffle`, {
-      waitUntil: "networkidle0",
+  try {
+    let browser = null;
+    browser = await puppeteer.launch({
+      args: chromium.args,
+      executablePath: await chromium.executablePath(),
+      headless: "new",
+      ignoreHTTPSErrors: true,
     });
-    await page.setRequestInterception(true);
-    const rejectRequestPattern = [
-      "googlesyndication.com",
-      "/*.doubleclick.net",
-      "/*.amazon-adsystem.com",
-      "/*.adnxs.com",
-    ];
-    const blockList = [];
-    page.on("request", (request) => {
-      if (
-        rejectRequestPattern.find((pattern) => request.url().match(pattern))
-      ) {
-        blockList.push(request.url());
-        request.abort();
-      } else request.continue();
-    });
-    if (response.status() !== 200)
-      return res.json({
-        error: true,
-        statuscode: response.status(),
-        message: "website is down",
+    const page = await browser.newPage();
+    async function getShuffle() {
+      console.log("run function");
+      await page.setUserAgent(
+        "5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36"
+      );
+      const response = await page.goto(`https://lahelu.com/shuffle`, {
+        waitUntil: "networkidle0",
       });
-    await page.waitForSelector("article");
-    console.log("loaded");
-    const $ = cheerio.load(await page.content());
-    const currpage = $('div[class^="Div_space__7HOAc Div_gap-xs__yTwgF"]');
-    //get author thing
-    const authorpfp = $("article").find("img").attr("src");
-    const authorname = $('span[class^="AuthorMeta_username__yRXGw"]').text();
-    //get media thing
-    const title = currpage.find("h1").text();
-    const media =
-      currpage.find("video").attr("src") || currpage.find("img").attr("src");
-    const category = $(
-      'div[class^="Div_space__7HOAc Div_gap-2xs__OnWXN Div_wrap__Ae_Kw"]'
-    ).text();
-    if (category.toLowerCase().includes("sensitif")) {
-      await browser.close();
-      console.log("sensitif");
-      return await getShuffle();
+      await page.setRequestInterception(true);
+      const rejectRequestPattern = [
+        "googlesyndication.com",
+        "/*.doubleclick.net",
+        "/*.amazon-adsystem.com",
+        "/*.adnxs.com",
+      ];
+      const blockList = [];
+      page.on("request", (request) => {
+        if (
+          rejectRequestPattern.find((pattern) => request.url().match(pattern))
+        ) {
+          blockList.push(request.url());
+          request.abort();
+        } else request.continue();
+      });
+      if (response.status() !== 200)
+        return res.json({
+          error: true,
+          statuscode: response.status(),
+          message: "website is down",
+        });
+      await page.waitForSelector("article");
+      console.log("loaded");
+      const $ = cheerio.load(await page.content());
+      const currpage = $('div[class^="Div_space__7HOAc Div_gap-xs__yTwgF"]');
+      //get author thing
+      const authorpfp = $("article").find("img").attr("src");
+      const authorname = $('span[class^="AuthorMeta_username__yRXGw"]').text();
+      //get media thing
+      const title = currpage.find("h1").text();
+      const media =
+        currpage.find("video").attr("src") || currpage.find("img").attr("src");
+      const category = $(
+        'div[class^="Div_space__7HOAc Div_gap-2xs__OnWXN Div_wrap__Ae_Kw"]'
+      ).text();
+      if (category.toLowerCase().includes("sensitif")) {
+        await browser.close();
+        return await getShuffle();
+      }
+      console.log("should returns something");
+      return {
+        author: {
+          name: authorname,
+          profilepicture: authorpfp,
+        },
+        title: title,
+        media: media,
+        category: category,
+      };
     }
+    const a = await getShuffle();
+    res.json({
+      error: false,
+      data: a,
+    });
     await browser.close();
-    console.log("should returns something");
-    return {
-      author: {
-        name: authorname,
-        profilepicture: authorpfp,
-      },
-      title: title,
-      media: media,
-      category: category,
-    };
+  } catch (e) {
+    console.log(e);
   }
-  const a = await getShuffle();
-  console.log(a);
-  res.json({
-    error: false,
-    data: a,
-  });
 });
+
 app.get("/lahelu/user/:username", async (req, res) => {
   const { username } = req.params;
   let browser = await puppeteer.launch({
@@ -97,7 +101,10 @@ app.get("/lahelu/user/:username", async (req, res) => {
     ignoreHTTPSErrors: true,
   });
   try {
-    const page = await browser.newPage();await page.setUserAgent('5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36');
+    const page = await browser.newPage();
+    await page.setUserAgent(
+      "5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36"
+    );
 
     const response = await page.goto(`https://lahelu.com/user/${username}`, {
       waitUntil: "networkidle0",
@@ -120,8 +127,8 @@ app.get("/lahelu/user/:username", async (req, res) => {
     });
     if (response.status() !== 200)
       return res.json({
-        error: true,        statuscode: response.status(),
-
+        error: true,
+        statuscode: response.status(),
         message: "User not found or website is down",
       });
     const $ = cheerio.load(await page.content());
@@ -134,12 +141,12 @@ app.get("/lahelu/user/:username", async (req, res) => {
     const allbadgeselector =
       "#__next > div > main > div > div.Div_space__7HOAc.Div_gap-xl__AU2oQ.Div_vertical__0POjO > div.Div_space__7HOAc.Div_gap-xs__yTwgF.Div_wrap__Ae_Kw > button:nth-child(5)";
     if (
-      (await page.waitForSelector(
+      (await page.$(
         "#__next > div > main > div > div.Div_space__7HOAc.Div_gap-xl__AU2oQ.Div_vertical__0POjO > div.Div_space__7HOAc.Div_gap-xs__yTwgF.Div_wrap__Ae_Kw > button:nth-child(1)"
       )) !== null
     ) {
       let buttons;
-      if ((await page.waitForSelector(allbadgeselector)) !== null) {
+      if ((await page.$(allbadgeselector)) !== null) {
         await page.click(allbadgeselector);
         buttons = await page.$$(
           "#__next > div > main > div > div.Div_space__7HOAc.Div_gap-xl__AU2oQ.Div_vertical__0POjO > div.Div_space__7HOAc.Div_gap-xs__yTwgF.Div_wrap__Ae_Kw button"
