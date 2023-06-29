@@ -40,7 +40,6 @@ app.get("/lahelu/random", async (req, res) => {
         "5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36"
       );
       const response = await page.goto(`https://lahelu.com/shuffle`, {
-        waitUntil: "networkidle0",
       });
       await page.setRequestInterception(true);
       const rejectRequestPattern = [
@@ -122,7 +121,6 @@ app.get("/lahelu/user/:username", async (req, res) => {
     );
 
     const response = await page.goto(`https://lahelu.com/user/${username}`, {
-      waitUntil: "networkidle0",
     });
     await page.setRequestInterception(true);
     const rejectRequestPattern = [
@@ -146,6 +144,7 @@ app.get("/lahelu/user/:username", async (req, res) => {
         statuscode: response.status(),
         message: "User not found or website is down",
       });
+    await page.waitForSelector("#__next > div > main > div > div.Div_space__7HOAc.Div_gap-xl__AU2oQ.Div_vertical__0POjO")
     const $ = cheerio.load(await page.content());
     const description = $('meta[property="og:description"]').attr("content");
     const profilepictureurl = $('meta[property="og:image"]').attr("content");
