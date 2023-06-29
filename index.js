@@ -2,12 +2,22 @@ const chromium = require("@sparticuz/chromium");
 const puppeteer = require("puppeteer-core");
 const cors = require("cors");
 const express = require("express");
+const rateLimit = require('express-rate-limit')
+const cheerio = require("cheerio");
 const app = express();
 const port = process.env.PORT ?? 8080;
-const cheerio = require("cheerio");
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+const createAccountLimiter = rateLimit({
+	windowMs: 60 * 60 * 1000, // 1 hour
+	max: 5, // Limit each IP to 5 create account requests per `window` (here, per hour)
+	message:
+		'Too many request created from this IP, please try again after an hour',
+	standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+	legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+})
+app.use(createAccountLimiter)
 app.get("/", (req, res) => {
   res.send("Hello World!");
 });
@@ -23,7 +33,6 @@ app.get("/lahelu/random", async (req, res) => {
     });
     const page = await browser.newPage();
     async function getShuffle() {
-      console.log("run function");
       await page.setUserAgent(
         "5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36"
       );
@@ -53,7 +62,6 @@ app.get("/lahelu/random", async (req, res) => {
           message: "website is down",
         });
       await page.waitForSelector("article");
-      console.log("loaded");
       const $ = cheerio.load(await page.content());
       const currpage = $('div[class^="Div_space__7HOAc Div_gap-xs__yTwgF"]');
       //get author thing
