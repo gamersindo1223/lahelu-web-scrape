@@ -20,7 +20,7 @@ app.get("/lahelu/random", async (req, res) => {
       ignoreHTTPSErrors: true,
     });
     const page = await browser.newPage();
-  
+  e
     async function getShuffle() {
       try {
         await page.goto(`https://lahelu.com/shuffle`, {
