@@ -28,7 +28,6 @@ app.get("/lahelu/random", async (req, res) => {
     browser = await puppeteer.launch({
       args: chromium.args,
       executablePath: await chromium.executablePath(),
-      headless: "new",
       ignoreHTTPSErrors: true,
     });
     const page = await browser.newPage();
@@ -105,7 +104,6 @@ app.get("/lahelu/user/:username", async (req, res) => {
   let browser = await puppeteer.launch({
     args: chromium.args,
     executablePath: await chromium.executablePath(),
-    headless: "new",
     ignoreHTTPSErrors: true,
   });
   try {
