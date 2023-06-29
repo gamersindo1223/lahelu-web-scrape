@@ -24,12 +24,16 @@ app.get("/", (req, res) => {
 
 app.get("/lahelu/random", async (req, res) => {
   try {
-    let browser = null;
-    browser = await puppeteer.launch({
+    const browser = await puppeteer.launch({
       args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
       executablePath: await chromium.executablePath(),
-      ignoreHTTPSErrors: true,
+      headless: chromium.headless,
     });
+    chromium.setHeadlessMode = true;
+  
+    // Optional: If you'd like to disable webgl, true is the default.
+    chromium.setGraphicsMode = false;
     const page = await browser.newPage();
     async function getShuffle() {
       await page.setUserAgent(
@@ -101,11 +105,16 @@ app.get("/lahelu/random", async (req, res) => {
 
 app.get("/lahelu/user/:username", async (req, res) => {
   const { username } = req.params;
-  let browser = await puppeteer.launch({
+  const browser = await puppeteer.launch({
     args: chromium.args,
+    defaultViewport: chromium.defaultViewport,
     executablePath: await chromium.executablePath(),
-    ignoreHTTPSErrors: true,
+    headless: chromium.headless,
   });
+  chromium.setHeadlessMode = true;
+
+  // Optional: If you'd like to disable webgl, true is the default.
+  chromium.setGraphicsMode = false;
   try {
     const page = await browser.newPage();
     await page.setUserAgent(
@@ -158,7 +167,6 @@ app.get("/lahelu/user/:username", async (req, res) => {
           "#__next > div > main > div > div.Div_space__7HOAc.Div_gap-xl__AU2oQ.Div_vertical__0POjO > div.Div_space__7HOAc.Div_gap-xs__yTwgF.Div_wrap__Ae_Kw button"
         );
       }
-
       // Click each button
       for (const button of buttons) {
         await button.click().then((x) => {
